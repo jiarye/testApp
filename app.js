@@ -6,6 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var session = require('express-session');
 var http = require('http'); 
+var hbs = require('hbs');
 var routes = require('./routes/index');
 var partials = require('express-partials');
 
@@ -13,7 +14,29 @@ var app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
+app.set('view engine', 'hbs');
+
+//设置hbs
+hbs.registerPartials(__dirname + '/views/partials');
+var blocks = {};
+
+hbs.registerHelper('extend', function(name, context) {
+    var block = blocks[name];
+    if (!block) {
+        block = blocks[name] = [];
+    }
+
+    block.push(context.fn(this)); // for older versions of handlebars, use block.push(context(this));
+});
+
+hbs.registerHelper('block', function(name) {
+    var val = (blocks[name] || []).join('\n');
+
+    // clear the block
+    blocks[name] = [];
+    return val;
+});
+
 
 // uncomment after placing your favicon in /public
 app.use(favicon(path.join(__dirname, 'public/img', 'favicon.ico')));
